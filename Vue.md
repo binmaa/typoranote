@@ -67,33 +67,64 @@ var app = new Vue({
      })
      ```
      
-   * v-show
-
-     根据表达式的真假，切换元素的显示隐藏
-
-     1. 原理：修改元素的display实现显示隐藏
-     2. 指令后面的内容，最终解析为布尔表达式
-     3. 值为true显示 false隐藏
-
-     ```html
-     <div id="vshow">
-         <button @click="changeShow">显示图标</button>
-         <image src="http://www.bluewave.com.cn/template/91/4752.png" v-show="isShow"></image>
-     </div>
-     ```
-
+     v-on 补充
+     
+     1. 事件绑定的方法写成函数调用形式，可以传入自定义参数
+     2. 定义方法时需要定义形参接受传入的实参
+     3. 事件的后面跟上.修饰符可以对事件进行限制（.enter 可以限制出发的按键为回车）
+     4. 事件修饰符有很多<https://cn.vuejs.org/v2/api/#v-on>
+     
      ```javascript
-     var vshow = new Vue({
-         el:"#vshow",
-         data:{
-             isShow:false
+     
+     ```
+  <div id="von">
+         <button @click="clickFunction(message,message2)">点击</button>
+  	<input @keyup.enter="keyupfunction"/>
+     </div>
+     var von = new Vue({
+         el:"#von",
+      data:{
+             message:1,
+             message2:2
          },
          methods:{
-             changeShow:function(){
-                 this.isShow=!this.isShow;
+             clickFunction:function(p1,p2){
+                 alert(p1+"/"+p2)
+          },
+             keyupfunction:function(){
+                 alert(22);
              }
          }
      })
+     ```
+
+   * v-show
+   
+     根据表达式的真假，切换元素的显示隐藏
+   
+     1. 原理：修改元素的display实现显示隐藏
+     2. 指令后面的内容，最终解析为布尔表达式
+  3. 值为true显示 false隐藏
+
+  ```html
+     <div id="vshow">
+      <button @click="changeShow">显示图标</button>
+         <image src="http://www.bluewave.com.cn/template/91/4752.png" v-show="isShow"></image>
+     </div>
+  ```
+
+     ```javascript
+  var vshow = new Vue({
+         el:"#vshow",
+      data:{
+             isShow:false
+         },
+         methods:{
+          changeShow:function(){
+                 this.isShow=!this.isShow;
+          }
+         }
+  })
      ```
 
    * v-if 
@@ -101,26 +132,100 @@ var app = new Vue({
      根据表达式的真假切换元素的显示状态
 
      1. 原理是通过操纵dom元素切换显示状态
-     2. 表达式为true元素存在dom树中，表达式false从dom树中删除
+  2. 表达式为true元素存在dom树中，表达式false从dom树中删除
      3. 频繁切换v-show,反之使用v-if，前者消耗小
 
    * v-bind
-
+   
      为元素绑定属性
-
+   
      1. 完整写法v-bind:属性名
      2. 简写省略v-bind,只保留 :属性名
      3. 需要动态的增删class建议使用对象的方式
-
+   
+   * v-for
+   
+     根据数据生成列表结构
+   
+     1. 数组经常v-for使用
      
-
+     2. 语法是（item,index) in 数据
      
-
+     3. item和index可以结合其他指令一起使用
      
-
+     4. 数组的长度的更新会同步到也面上，是xing响应式的
      
-
+        ```javascript
+        <div id="vfor">
+            <ul>
+             <li v-for="(item,index) in arr">{{index}}\{{item.name}}</li>
+            </ul>
+         <h3 v-for="item in arr2" v-text="item"></h3>
+            <button @click="add">添加元素</button>
+         <button @click="shift">移除元素</button>
+        </div>
+     var vfor = new Vue({
+            el:"#vfor",
+         data:{
+                arr:[{name:"姓名"},{name:"姓名2"}],
+             arr2:["西红柿","辣椒","角瓜"]
+            },
+         methods:{
+                add:function(){
+                 this.arr2.push("鸡蛋");
+                },
+             shift:function(){
+                    this.arr2.shift();
+             }
+            }
+        })
+        ```
+      
+        
+   
+   * v-model
+   
+     便捷的设置和获取表单元素的值
+   
+     1. 绑定的数据会和表单元素值相关联
      
-
+   2. 绑定的数据《----------》表单元素的值（<font color='red'>双向绑定</font>）
+   
+      ```javascript
+      <div id="vmodel">
+          <input type="text" v-model="message" @keyup.enter="getMessage"/>
+          <h3>{{message}}</h3>
+      </div>
+      var vmodel = new Vue({
+          el:"#vmodel",
+          data:{
+              message:"message"
+          },
+          methods:{
+              getMessage:function(){
+                  alert(this.message)
+              }
+          }
+      })
+      ```
+   
+      
+   
+   * 
+   
+   * 
+   
+     
+   
+     
+   
+     
+   
+     
+   
+     
+   
+     
+   
      
 
