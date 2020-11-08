@@ -254,6 +254,26 @@ Typora支持加入用LaTeX写成的数学公式，并且在软件界面下用Mat
 
 注：一些实体符号需要在实体符号之前加""才能够显示
 
+
+
+**上标**
+
+```html
+2<sup>2</sup>
+```
+
+效果: 2<sup>2</sup>
+
+**下标**
+
+```html
+log<sub>2</sub><sup>8</sup>
+```
+
+效果：log<sub>2</sub><sup>8</sup>
+
+
+
 ------
 
 1. 伟大的而自由的国家 [↩︎](https://blog.csdn.net/SIMBA1949/article/details/79001226#fnref1)
