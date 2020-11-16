@@ -193,7 +193,7 @@ var app = new Vue({
         })
         ```
      
-        
+        **v-for 中的:key，给标签设置一个标记，具体详细解释**
 
    * v-model
 
