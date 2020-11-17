@@ -1,3 +1,5 @@
+网易云音乐接口 <a>https://binaryify.github.io/NeteaseCloudMusicApi/#/</a>
+
 * Vue基本语法
 
 1. {{}} 插值表达式，插值表达式只能用于普通文本
@@ -191,7 +193,7 @@ var app = new Vue({
         })
         ```
      
-        
+        **v-for 中的:key，给标签设置一个标记，具体详细解释**
 
    * v-model
 
@@ -227,6 +229,12 @@ var app = new Vue({
      3. then方法中的回调函数会在请求成功或失败时触发
      4. 通过回调函数的形参可以获取响应内容，或错误信息
 
-   
+
+
+**vue.js的生命周期函数执行流程**
+
+
+![img](image/vue/vue.js的生命周期函数执行流程.png)
+
 
 
