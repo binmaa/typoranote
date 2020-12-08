@@ -272,6 +272,13 @@ alter table tableName
 
 #### 约束
 
+​	查看约束（查看见表语句）
+
+```sql
+SHOW CREATE TABLE <数据表名>;
+```
+
+
 1. 主键约束
 
    - 每个表只能定义一个主键。
@@ -329,14 +336,53 @@ alter table tableName
    + 死锁问题 高并发大流量事务场景，使用外键还可能容易造成死锁
    + 开发不方便 有外键时，无论开发还是维护，需要手工维护数据时，都不太方便，要考虑级联因素
 
-   
-
 3. 唯一约束
 
    唯一约束与主键约束有一个相似的地方，就是它们都能够确保列的唯一性。与主键约束不同的是，<font color='red'>唯一约束在一个表中可以有多个，并且设置唯一约束的列是允许有空值的，虽然只能有一个空值。</font>
 
+   ```sql
+   --添加唯一约束
+   ALTER TABLE <数据表名> ADD CONSTRAINT <唯一约束名> UNIQUE(<列名>);
+   --删除唯一约束
+   ALTER TABLE <表名> DROP INDEX <唯一约束名>;
+   ```
+
 4. 检查约束
+
+   将 CHECK 约束子句置于表中某个列的定义之后，则这种约束也称为基于列的 CHECK 约束。
+
+   若将 CHECK 约束子句置于所有列的定义以及主键约束和外键定义之后，则这种约束也称为基于表的 CHECK 约束。该约束可以同时对表中多个列设置限定条件。
+
+   ```sql
+   ALTER TABLE tb_emp7 ADD CONSTRAINT <检查约束名> CHECK(<检查约束>)
+   ALTER TABLE <数据表名> DROP CONSTRAINT <检查约束名>;
+   ```
 
 5. 非空约束
 
+   ```sql
+   --创建表时
+   <字段名> <数据类型> NOT NULL;
+   --添加非空约束
+   ALTER TABLE <数据表名>CHANGE COLUMN <字段名><字段名> <数据类型> NOT NULL;
+   --删除非空约束
+   ALTER TABLE <数据表名>CHANGE COLUMN <字段名> <字段名> <数据类型> NULL;
+   ```
+
+   
+
 6. 默认值约束
+
+   默认值约束通常用在已经设置了非空约束的列
+
+   ```sql
+   --创建表时
+   <字段名> <数据类型> DEFAULT <默认值>;
+   --修改表时添加默认值
+   ALTER TABLE <数据表名> CHANGE COLUMN <字段名> <数据类型> DEFAULT <默认值>;
+   --删除默认值约束
+   ALTER TABLE <数据表名> CHANGE COLUMN <字段名> <字段名> <数据类型>;
+   ```
+
+   
+
