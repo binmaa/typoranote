@@ -165,7 +165,7 @@ var app = new Vue({
      
      3. item和index可以结合其他指令一起使用
      
-     4. 数组的长度的更新会同步到也面上，是xing响应式的
+     4. 数组的长度的更新会同步到也面上，是《响应式的
      
         ```javascript
         <div id="vfor">
@@ -193,7 +193,7 @@ var app = new Vue({
         })
         ```
      
-        **v-for 中的:key，给标签设置一个标记，具体详细解释**
+        <font color='red'>**v-for 中的:key，给标签设置一个标记，具体详细解释**</font>
 
    * v-model
 
@@ -224,17 +224,67 @@ var app = new Vue({
    
 
    * axios
+     
      1. axios必须先导入才可以使用
      2. 使用get或post方法发送对应的请求
      3. then方法中的回调函数会在请求成功或失败时触发
      4. 通过回调函数的形参可以获取响应内容，或错误信息
+     
+   * watch
 
+     侦听器
+
+     ```javascript
+     data() {
+         return {
+           //侦听对象
+           tag:"全部",
+           obj:{
+               a:'',b:''
+           }
+         };
+     },
+     watch:{
+         tag(newValue,oldValue){
+           console.log(newValue+"  "+oldValue);
+           //推荐音乐 精品歌单
+           axios({
+             url:"https://autumnfish.cn/top/playlist/highquality",
+             methods:"get",
+             params:{limit:1,cat:this.tag}
+           }).then(res=>{
+             //console.log(res);
+             this.topList = res.data.playlists[0];
+           })
+       },
+       obj(){
+         console.log(this.obj.a)  
+       },
+       deep:true,//深度侦听 侦听对象属性变化
+       immediate:true // watch侦听操作内的函数会立刻被执行
+     }
+     ```
+
+   * 组件通信
+
+     > 子传父
+     >
+     > ```javascript
+     > //this.$parent获取父组件可以修改任意值
+     > this.$parent.musicUrl = res.data.data[0].url;
+     > ```
+     >
+     > 父传子
+     >
+  > 
+   
+   * 
 
 
 **vue.js的生命周期函数执行流程**
 
 
-![img](image/vue/vue.js的生命周期函数执行流程.png)
+![img](../image/vue/vue.js的生命周期函数执行流程.png)
 
 
 
