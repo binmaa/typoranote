@@ -1,5 +1,7 @@
 [toc]
 
+[Mysql下载](https://dev.mysql.com/downloads/mysql/)
+
 #### 数据类型
 
 *MySQL数据类型和Java数据类型对应关系*
@@ -415,7 +417,7 @@ SHOW CREATE TABLE <数据表名>;
 (10)    LIMIT <limit_number>
 ```
 
-#### 函数
+#### 函数及流程控制语句
 
 1. 数值函数
 
@@ -480,6 +482,16 @@ SHOW CREATE TABLE <数据表名>;
    | [IF](http://c.biancheng.net/mysql/if.html)         | 判断，流程控制 <br>IF(expr,v1,v2)<br>其中：表达式 expr 得到不同的结果，当 expr 为真是返回 v1 的值，否则返回 v2. |
    | [IFNULL](http://c.biancheng.net/mysql/ifnull.html) | 判断是否为空<br>IFNULL(v1,v2)<br>其中：如果 v1 不为 NULL，则 IFNULL 函数返回 v1; 否则返回 v2 的结果。 |
    | [CASE](http://c.biancheng.net/mysql/case.html)     | 搜索语句<br>简单CASE句：CASE  <表达式>    WHEN <值1> THEN <操作>    WHEN <值2> THEN <操作>    ...    ELSE <操作> END ;<br>CASE  WHEN <条件1> THEN <命令>     WHEN <条件2> THEN <命令>     ...     ELSE commands END CASE<br>简单 CASE 语句仅允许将表达式的值与一组不同的值进行匹配。 为了执行更复杂的匹配，如范围，则可以使用可搜索 CASE 语句。 可搜索 CASE 语句等同于 IF 语句，但是它的构造更加可读。 |
+   
+6. 流程控制语句
+
+   | 流程控制语句名称       | 示例                                                         | 说明                                                         |
+   | ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+   | if 语句                | IF search_condition THEN statement_list<br/>[ELSEIF search_condition THEN statement_list]...    <br/>[ELSE statement_list] <br/>END IF |                                                              |
+   | case语句               | CASE case_value    <br/>WHEN when_value THEN statement_list     <br/>[WHEN when_value THEN statement_list]...     <br/>[ELSE statement_list] <br/>END CASE |                                                              |
+   | loop leave iterate语句 | add_num:LOOP     <br/>SET @count=@count+1;    <br/>IF @count=100 THEN        <br/>LEAVE add_num;     <br/>ELSE IF MOD(@count,3)=0 THEN         <br/>ITERATE add_num;   END IF  <br/>SELECT * FROM employee;<br/>END LOOP add_num; | LOOP 只实现了一个简单的循环，并不进行条件判断,可以使某些特定的语句重复执行。<br/>LEAVE 语句主要用于跳出循环控制。<br>ITERATE 是“再次循环”的意思，用来跳出本次循环，直接进入下一次循环。 |
+   | repeat语句             | [begin_label:] REPEAT<br/>statement_list<br/>UNTIL search_condition<br/>END REPEAT [end_label] | REPEAT 语句是有条件控制的循环语句<br/>begin_label和end_label相同可以省略<br/>search_condition 参数表示结束循环的条件，满足该条件时循环结束。 |
+   | while语句              | [begin_label:] WHILE search_condition DO<br/>statement list<br/>END WHILE [end label] | begin_label和end_label可省略<br/>WHILE 语句也是有条件控制的循环语句。<br/>search_condition 参数表示循环执行的条件，满足该条件时循环执行 |
 
 #### 查询语句
 
@@ -802,3 +814,169 @@ DROP VIEW <视图名1> [ , <视图名2> …]
 
      <font color='red'>注:</font>索引可以提高查询速度，但是会影响插入记录的速度。因为，向有索引的表中插入记录时，数据库系统会按照索引进行排序，这样就降低了插入记录的速度，插入大量记录时的速度影响会更加明显。这种情况下，最好的办法是先删除表中的索引，然后插入数据，插入完成后，再创建索引。
 
++ **索引创建原则**
+
+  1. 查询频次较高的表，且数据量较大的表建立索引
+
+  2. 索引的字段经常出现在where 子句中的字段，如果where 子句的条件比较多，应该挑选最常用的，过滤效果最好的建立索引
+
+  3. 尽量使用唯一索引，区分度越高，索引效率越高
+
+  4. 索引可以有效提升查询的效率，但是索引不是越多越好，索引越多，维护索引的代价自然水涨船高，对于数据的更新等管理操作，比较频繁的表来说，索引过多会导致相当高的维护代价，较低dml的操作效率
+
+  5. 使用短索引，索引创建后也是使用硬盘来存储，因此提升索引的访问的i/o效率，也可以提升总体的访问效率，假如构成索引的字段总长度比较短，那么在给定大小的存储块内可以存储更多的索引值，相应的可以提升mysql访问索引的i/o效率
+
+  6. 利用最左前缀，N个列组合而成的索引，那么相当于创建了N个索引，如果查询时where子句中使用了组成该索引的前几个字段，那么这条件查询sql可以利用组合索引提升查询的效率.
+
+     总结：1.表数据量大频繁作为查询条件的字段 2.尽量使用唯一索引区分度高 3.频繁更新的字段不适合做索引 4.使用短索引 5.利用最左前缀
+     
+     
+
++ **索引类型和种类**
+
+  1. 索引类型
+
+     索引类型：FULLTEXT，HASH，BTREE，RTREE。
+     + FULLTEXT
+       即为全文索引，目前只有MyISAM引擎支持。其可以在CREATE TABLE ，ALTER TABLE ，CREATE INDEX 使用，不过目前只有 CHAR、VARCHAR ，TEXT 列上可以创建全文索引。
+
+     + HASH
+       由于HASH的唯一（几乎100%的唯一）及类似键值对的形式，很适合作为索引。
+       HASH索引可以一次定位，不需要像树形索引那样逐层查找,因此具有极高的效率。但是即只在“=”和“in”条件下高效，对于范围查询、排序及组合索引仍然效率不高。
+
+     + BTREE
+       BTREE索引就是一种将索引值按一定的算法，存入一个树形的数据结构中（二叉树），每次查询都是从树的入口root开始，依次遍历node，获取leaf。MySQL里默认和最常用的索引类型。
+
+     + RTREE
+       RTREE在MySQL很少使用，仅支持geometry数据类型，支持该类型的存储引擎只有MyISAM、BDb、InnoDb、NDb、Archive几种。
+       相对于BTREE，RTREE的优势在于范围查找。
+
+  2. 索引种类
+
+     + 普通索引：仅加速查询
+     + 唯一索引：加速查询 + 列值唯一（可以有null）
+     + 主键索引：加速查询 + 列值唯一（不可以有null）+ 表中只有一个
+     + 组合索引：多列值组成一个索引，专门用于组合搜索，其效率大于索引合并
+     + 全文索引：对文本的内容进行分词，进行搜索
+       ps.
+       索引合并，使用多个单列索引组合搜索
+       覆盖索引，select的数据列只用从索引中就能够取得，不必读取数据行，换句话说查询列要被所建的索引覆盖
+
++ **索引是否能命中**
+
+  + 命中索引
+
+    WHERE和JOIN中出现的列需要建立索引并且条件未<，<=，=，>，>=，BETWEEN，IN，以及后匹配的LIKE才会使用索引
+
+  + 命不中索引的情况
+
+    1. like 前匹配（'%文字' '_文字'）
+
+    2. 列使用函数 where reverse(name) 对筛选列进行了运算
+
+    3. or 中有为建索引的列
+
+    4. 类型不一致(where name = 999 name为字符串类型) <font color='red'>如果是主键或索引是整数类型，则还是会走索引</font>
+
+    5. 当根据索引排序时候，选择的映射列中有不是索引，则不走索引<font color='red'>主键排序，则还是走索引</font>
+
+    6. 组合索引 最左前缀（name,index) 
+
+       ```sql
+       where name='' and index =1 --走索引
+       where index='' and name =1 --走索引
+       where name='' or index =1 --走索引
+       where index='' or name =1 --不走索引
+       where name='' --走索引
+       where index=1 --不走索引
+       ```
+
++ **大数据分页**
+
+  原(弊端：每一条select语句都会从1遍历至当前位置，若跳转到第100页，则会遍历1000条记录)
+
+  ```sql
+  SELECT * FROM table_name LIMIT 0,10;--第一页
+  SELECT * FROM table_name LIMIT 10,10;--第二页
+  SELECT * FROM table_name LIMIT 20,10;--第三页
+  ```
+
+  改进(优点：若已知每页的max_id和min_id，则可以通过主键索引来快速定位)
+
+  ```sql
+  --下一页SELECT * FROM table_name WHERE id in (SELECT id FROM table_name WHERE id > max_id LIMIT 10);
+  --上一页SELECT * FROM table_name WHERE id in (SELECT id FROM table_name WHERE id < min_id ORDER BY id DESC LIMIT 10);
+  --5.7子查询中不支持limit 需要再加一层
+  --This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
+  select * from smzt where id in (select t.id from (select id from smzt where id>1000000 limit 10) as t);
+  ```
+
+  局限：1. 只能一页一页查询
+
+  			2. id是顺序的
+     			3. 前端要传给后台最新一页的最后一个id
+        			4. 后端不能任意排序
+
++ **SQL注意事项**
+
+  > 避免使用select *
+  > - 创建表时尽量时 char 代替 varchar
+  > - 表的字段顺序固定长度的字段优先
+  > - 组合索引代替多个单列索引（经常使用多个条件查询时）
+  > - 尽量使用短索引
+  > - 使用连接（JOIN）来代替子查询(Sub-Queries)
+  > - 连表时注意条件类型需一致
+  > - 索引散列值（重复多）不适合建索引，例：性别不适合
+
+#### 存储过程
+
++ **存储过程操作**
+
+  ```sql
+  --1、创建存储过程
+  delimiter //   --修改sql结束符
+  create procedure psmzt(in id int(11))
+  begin
+  select * from smzt where id = id;
+  end
+  //
+  
+  --参数类别
+  [ IN | OUT | INOUT ] <参数名> <类型>
+  
+  --2、查看存储过程
+  SHOW PROCEDURE STATUS LIKE 存储过程名;
+  SHOW CREATE PROCEDURE 存储过程名;
+  SELECT * FROM information_schema.routines WHERE routine_name='ShowStuScore'; --存储过程存在information_schema库下routines表中
+  --3、删除存储过程
+  DROP PROCEDURE [ IF EXISTS ] <过程名>
+  ```
+
++ **存储函数**
+
+  ```sql
+  --创建存储函数
+  delimiter //
+  create function func_smzt(id int(11))
+  returns varchar(30)
+  comment '涉密载体查询'
+  begin
+  return (select name from smzt where smzt.id=id);
+  end
+  //
+  ```
+
+  
+
++ **变量**
+
+  ```sql
+  --定义变量 可以定义多个
+  DECLARE var_name[,...] type [DEFAULT value]
+  --变量赋值 可以多个
+  SET var_name = expr[,var_name = expr]...
+  --SELECT..INTO 为变量赋值
+  SELECT col_name [...] INTO var_name[,...] FROM table_name WEHRE condition
+  ```
+
+  
