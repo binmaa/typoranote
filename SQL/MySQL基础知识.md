@@ -915,7 +915,7 @@ DROP VIEW <视图名1> [ , <视图名2> …]
 
   			2. id是顺序的
      			3. 前端要传给后台最新一页的最后一个id
-        			4. 后端不能任意排序
+              			4. 后端不能任意排序
 
 + **SQL注意事项**
 
@@ -980,3 +980,272 @@ DROP VIEW <视图名1> [ , <视图名2> …]
   ```
 
   
+
+#### 事务
+
+​	[查看事务](./MySQL事务.md)
+
+#### 字符集及校对规则
+
+​	字符集（Character set）定义了字符和二进制的对应关系，为字符分配了唯一的编号。常见的字符集有 ASCII、GBK、IOS-8859-1 等。
+
+​	字符编码（Character encoding）也可以称为字集码，规定了如何将字符的编号存储到计算机中。
+
+​	校对规则（Collation）也可以称为排序规则，是指在同一个字符集内字符之间的比较规则。字符集和校对规则是一对多的关系，每个字	符集都有一个默认的校对规则。字符集和校对规则相辅相成，相互依赖关联。
+
+#### 用户管理
+
++ 创建用户
+
+  ```sql
+  --1.
+  --用户:创建用户账号，格式为 user_name'@'host_name。这里的user_name是用户名，host_name为主机名，即用户连接 MySQL 时所用主机的名字。如果在创建的过程中，只给出了用户名，而没指定主机名，那么主机名默认为“%”，表示一组主机，即对所有主机开放权限
+  --IDENTIFIED BY:于指定用户密码。
+  --PASSWORD 'password':PASSWORD 表示使用哈希值设置密码，该参数可选。如果密码是一个普通的字符串，则不需要使用 PASSWORD 关键字。'password' 表示用户登录时使用的密码，需要用单引号括起来。
+  
+  CREATE USER <用户> [ IDENTIFIED BY [ PASSWORD ] 'password' ] [ ,用户 [ IDENTIFIED BY [ PASSWORD ] 'password' ]]
+  
+  create user mabin identified by password '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9';
+  create user mabin@localhost identified by password '123456';
+  
+  --2.
+  --insert 方式新增用户
+  --ssl_cipher、x509_issuer 和 x509_subject 这 3 个字段没有默认值，所以向 user 表插入新记录时，一定要设置这 3 个字段的值，否则 INSERT 语句将不能执行。
+  INSERT INTO mysql.user(Host, User,  authentication_string, ssl_cipher, x509_issuer, x509_subject) VALUES ('hostname', 'username', PASSWORD('password'), '', '', '');
+  
+  --3.
+  --GRANT语句新建用户
+  GRANT priv_type ON database.table TO user [IDENTIFIED BY [PASSWORD] 'password']
+  --创建名为 test3 的用户，主机名为 localhost，密码为 test3。该用户对所有数据库的所有表都有 SELECT 权限。
+  GRANT SELECT ON*.* TO 'test3'@localhost IDENTIFIED BY 'test3';
+  
+  --FLUSH 命令让用户生效
+  FLUSH PRIVILEGES;
+  ```
+
++ 修改用户
+
+  ```sql
+  RENAME USER <旧用户> TO <新用户>
+  RENAME USER 'test1'@'localhost'TO 'testUser1'@'127.0.0.1'
+  ```
+
++ 删除用户
+
+  ```sql
+  --使用 DROP USER 语句删除普通用户
+  DROP USER <用户1> [ , <用户2> ]…
+  DROP USER 'test1'@'localhost';
+  
+  --使用DELETE语句删除普通用户
+  DELETE FROM mysql.user WHERE Host='hostname' AND User='username';
+  ```
+
++ 查看用户权限
+
+  ```sql
+  SELECT * FROM mysql.user;
+  
+  SHOW GRANTS FOR root@localhost;
+  ```
+
++ 授权
+
+  ```sql
+  GRANT priv_type [(column_list)] ON database.table
+  TO user [IDENTIFIED BY [PASSWORD] 'password']
+  [, user[IDENTIFIED BY [PASSWORD] 'password']] ...
+  [WITH with_option [with_option]...]
+  ```
+
+  + priv_type 参数表示权限类型；
+  + columns_list 参数表示权限作用于哪些列上，省略该参数时，表示作用于整个表；
+  + database.table 用于指定权限的级别；
+  + user 参数表示用户账户，由用户名和主机名构成，格式是“'username'@'hostname'”；
+  + IDENTIFIED BY 参数用来为用户设置密码；
+  + password 参数是用户的新密码。
+  + WITH 关键字后面带有一个或多个 with_option 参数。这个参数有 5 个选项，详细介绍如下：
+    - GRANT OPTION：被授权的用户可以将这些权限赋予给别的用户；
+    - MAX_QUERIES_PER_HOUR count：设置每个小时可以允许执行 count 次查询；
+    - MAX_UPDATES_PER_HOUR count：设置每个小时可以允许执行 count 次更新；
+    - MAX_CONNECTIONS_PER_HOUR count：设置每小时可以建立 count 个连接;
+    - MAX_USER_CONNECTIONS count：设置单个用户可以同时具有的 count 个连接。
+
+  + 在 GRANT 语句中可用于指定权限级别的值有以下几类格式（ON后面的）：
+    - *：表示当前数据库中的所有表。
+    - *.*：表示所有数据库中的所有表。
+    - db_name.*：表示某个数据库中的所有表，db_name 指定数据库名。
+    - db_name.tbl_name：表示某个数据库中的某个表或视图，db_name 指定数据库名，tbl_name 指定表名或视图名。
+    - db_name.routine_name：表示某个数据库中的某个存储过程或函数，routine_name 指定存储过程名或函数名。
+    - TO 子句：如果权限被授予给一个不存在的用户，MySQL 会自动执行一条 CREATE USER 语句来创建这个用户，但同时必须为该用户设置密码。
+
+  附：
+
+  <权限类型>可以指定为以下值：
+
+  | 权限名称                       | 对应user表中的字段 | 说明                                                       |
+  | ------------------------------ | ------------------ | ---------------------------------------------------------- |
+  | SELECT                         | Select_priv        | 授予用户可以使用 SELECT 语句进行访问特定表的权限           |
+  | INSERT                         | Insert_priv        | 授予用户可以使用 INSERT 语句向一个特定表中添加数据行的权限 |
+  | DELETE                         | Delete_priv        | 授予用户可以使用 DELETE 语句从一个特定表中删除数据行的权限 |
+  | DROP                           | Drop_priv          | 授予用户可以删除数据表的权限                               |
+  | UPDATE                         | Update_priv        | 授予用户可以使用 UPDATE 语句更新特定数据表的权限           |
+  | ALTER                          | Alter_priv         | 授予用户可以使用 ALTER TABLE 语句修改数据表的权限          |
+  | REFERENCES                     | References_priv    | 授予用户可以创建一个外键来参照特定数据表的权限             |
+  | CREATE                         | Create_priv        | 授予用户可以使用特定的名字创建一个数据表的权限             |
+  | INDEX                          | Index_priv         | 授予用户可以在表上定义索引的权限                           |
+  | ALL 或 ALL PRIVILEGES 或 SUPER | Super_priv         | 所有的权限名                                               |
+
++ 删除用户权限
+
+  ```sql
+  REVOKE priv_type [(column_list)]...
+  ON database.table
+  FROM user [, user]...
+  
+  --priv_type 参数表示权限的类型；
+  --column_list 参数表示权限作用于哪些列上，没有该参数时作用于整个表上；
+  --user 参数由用户名和主机名构成，格式为“username'@'hostname'”。
+  
+  revoke delete on *.* from mabin@127.0.0.1;
+  ```
+
++ 登录
+
+  ```sql
+  --登录
+  mysql -h hostname|hostlP -P port -u username -p
+  --登录并切到指定库
+  mysql -h hostname|hostlP -P port -u username -p DatabaseName
+  --执行某条语句后退出
+  mysql -h hostname|hostlP -P port -u username -p DatabaseName -e "SQL语句"
+  
+  mysql -h127.0.0.1 -P3306 -uroot -p123456 hz717 -e "select * from aqzsk"
+  ```
+
++ 修改密码
+
+  ```sql
+  --1.root 修改普通用户和自己密码
+  SET PASSWORD FOR 'username'@'hostname' = PASSWORD ('newpwd');
+  --2.root 修改普通用户和自己密码
+  UPDATE MySQL.user SET authentication_string = PASSWORD("newpwd") WHERE User = "username" AND Host = "hostname";
+  FLUSH PRIVILEGES;--加载权限
+
+  --3.root和普通用户修改自己密码
+  SET PASSWORD = PASSWORD('newpwd');
+  
+  --4.grant
+  GRANT USAGE ON *.* TO 'user'@’hostname’ IDENTIFIED BY 'newpwd';
+  ```
+  
+  ```sql
+  --修改root密码 密码要用""
+  mysqladmin -u username -h hostname -p password "newpwd"
+  mysqladmin -P3306 -uroot -p password "123456"
+  ```
+  
+  
+
+#### MySQL权限控制原理
+
+权限按照以下权限表的顺序得到数据库权限：user→db→tables_priv→columns_priv→procs_priv。在这几个权限表中，权限范围依次递减，全局权限覆盖局部权限。
+
+[说明：http://c.biancheng.net/view/8011.html](http://c.biancheng.net/view/8011.html)
+
+#### MySQL日志
+
+```sql
+--日志输出位置
+set global log_output='FILE,TABLE';
+```
+
+1. 通用日志
+
+   ```sql
+   --通用日志表mysql.general_log
+   --通用日志是否开启
+   SHOW VARIABLES like 'general_log';
+   --通用日志输出文件
+   SHOW VARIABLES like 'general_log_file';
+   --通用日志输出位置
+   SHOW VARIABLES like 'log_output';
+   ```
+
+2. 慢SQL日志
+
+   ```sql
+   --慢SQL日志表mysql.slow_log
+   --慢SQL日志是否开启
+   show variables like 'slow_query_log';
+   --通用日志输出文件
+   show variables like 'slow_query_log_file';
+   --慢SQL超过多少才记录 --设置完成之后需要重新连接生效
+   show variables like 'long_query_time';
+   SET GLOBAL long_query_time=0.1;
+   ```
+
+MySQL优化
+
+​	优化查询速度、更新速度、优化MySQL服务器。
+
+ 	1. 定位低效的SQL
+
++ 如果慢查询日志中记录内容很多，可以使用 mysqldumpslow 工具（ MySQL 客户端安装自带,使用需要安装perl环境）来对慢查询日志进行分类汇总。
+
+  ```sql
+  mysqldumpslow mysql_master-slow.log
+  Reading mysql slow query log from mysql_master-slow.log
+  Count: 2 Time=11.00s (22s) Lock=0.00s (0s) Rows=1.0 (2), root[root]@mysql_master
+  select count(N) from t_user;
+  ```
+
+  对于 SQL 文本完全一致，只是变量不同的语句， mysqldumpslow 将会自动视为同一个语句进行统计，变量值用 N 来代替。这个统计结果将大大增加用户阅读慢查询日志的效率，并迅速定位系统的 SQL 瓶颈。
+
++ show processlist 
+
+  命令查看当前 MySQL 在进行的线程，包括线程的状态、是否锁表等，可以实时地查看 SQL 的 执行情况，同时对一些锁表操作进行优化。
+
+	|列|描述|
+	| ---- | ------------------------------------------------------------ |
+	|ID列|一个标识，你要kill一个语句的时候很有用，用命令杀掉此查询 /*/mysqladmin kill 进程号。|
+	| user列 | 显示当前用户，如果不是root，这个命令就只显示你权限范围内的sql语句。|
+	| host列 | 显示这个语句是从哪个ip的哪个端口上发出的。用于追踪出问题语句的用户。|                                                           |
+	| db列  | 显示这个进程目前连接的是哪个数据库。|
+	|command列|显示当前连接的执行的命令，一般就是休眠（sleep），查询（query），连接（connect）。|
+	|time列|此这个状态持续的时间，单位是秒。|
+	|state列|显示使用当前连接的sql语句的状态，很重要的列，后续会有所有的状态的描述，请注意，state只是语句执行中的某一个状态，一个 sql语句，以查询为例，可能需要经过copying to tmp table，Sorting result，Sending data等状态才可以完成|
+	|info列|显示这个sql语句，因为长度有限，所以长的sql语句就显示不全，但是一个判断问题语句的重要依据。|
+	
+	| state列意义 | 描述 |
+	| ----------- | ---- |
+	|            Checking table            |正在检查数据表（这是自动的）。|
+	|Copying to tmp table on disk|　由于临时结果集大于tmp_table_size，正在将临时表从内存存储转为磁盘存储以此节省内存。|
+	|Creating tmp table|正在创建临时表以存放部分查询结果。|
+	|deleting from main table|服务器正在执行多表删除中的第一部分，刚删除第一个表。|
+	|deleting from reference tables|服务器正在执行多表删除中的第二部分，正在删除其他表的记录。|
+	|Flushing tables|正在执行FLUSH TABLES，等待其他线程关闭数据表。|
+	|Killed|发送了一个kill请求给某线程，那么这个线程将会检查kill标志位，同时会放弃下一个kill请求。MySQL会在每次的主循环中检查kill标志位，不过有些情况下该线程可能会过一小段才能死掉。如果该线程程被其他线程锁住了，那么kill请求会在锁释放时马上生效。|
+	|Locked|被其他查询锁住了。|
+	|Sending data|正在处理SELECT查询的记录，同时正在把结果发送给客户端。|
+	|Sorting for group|正在为GROUP BY做排序。|
+	|Sorting for order|正在为ORDER BY做排序。|
+	|Opening tables|这个过程应该会很快，除非受到其他因素的干扰。例如，在执ALTER TABLE或LOCK TABLE语句行完以前，数据表无法被其他线程打开。正尝试打开一个表。|
+	|Removing duplicates|正在执行一个SELECT DISTINCT方式的查询，但是MySQL无法在前一个阶段优化掉那些重复的记录。因此，MySQL需要再次去掉重复的记录，然后再把结果发送给客户端。|
+	|Searching rows for update|正在讲符合条件的记录找出来以备更新。它必须在UPDATE要修改相关的记录之前就完成了。|
+	|Sleeping|正在等待客户端发送新请求.|
+	|System lock|正在等待取得一个外部的系统锁。如果当前没有运行多个mysqld服务器同时请求同一个表，那么可以通过增加--skip-external-locking参数来禁止外部系统锁。|
+	|Updating|正在搜索匹配的记录，并且修改它们。|
+	|User Lock|正在等待GET_LOCK()。|
+
+表结构结构优化方式：
+
+ 	1.  选择合适的数据类型
+      + 使用可以存下数据的最小数据类型
+      + 使用简单的数据类型。Int要比varchar类型在mysql处理上简单（使用int存储日期时间:FROM_UNIXTIME()将int类型时间戳转换成日期时间格式  UNIX_TIMESTAMP()将日期时间格式转换成int类型 、bigint来存储IP地址，利用INET_ATON() 将IP格式转换成int INET_NTOA()将int格式转换成正常IP格式）
+      + 尽可能使用not null定义字段
+      + 尽量少用text类型，非用不可时最好考虑分表
+ 	2.  表的范式化和反范式化
+ 	3.  表的垂直拆分
+ 	4.  水平拆分 
+
