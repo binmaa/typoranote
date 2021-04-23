@@ -193,7 +193,7 @@ server {
 
 ```nginx
 upstream somestream {
-    hash $request_uri;
+    hash $request_uri consistent; #consistent 使用一致性哈希
     server 192.168.244.1:8080;
     server 192.168.244.2:8080;
     server 192.168.244.3:8080;
@@ -249,6 +249,63 @@ server {
 > 在服务器8080和8081分别开了一个应用，客户端通过不同的域名访问，根据server_name可以反向代理到对应的应用服务器。
 >
 > 虚拟主机的原理是通过HTTP请求头中的`Host`是否匹配s`erver_name`来实现的，有兴趣的同学可以研究一下HTTP协议。
+
+###### 5.location详解
+
+> 语法规则： `location [=|~|~*|^~] /uri/ { … }`
+>
+> - `=` 开头表示精确匹配
+>
+> - `^~` 开头表示uri以某个常规字符串开头，理解为匹配 url路径即可。nginx不对url做编码，因此请求为/static/20%/aa，可以被规则^~ /static/ /aa匹配到（注意是空格）。以xx开头
+>
+> - `~` 开头表示区分大小写的正则匹配           以xx结尾
+>
+> - `~*` 开头表示不区分大小写的正则匹配        以xx结尾
+>
+> - `!~`和`!~*`分别为区分大小写不匹配及不区分大小写不匹配 的正则
+>
+> - `/` 通用匹配，任何请求都会匹配到。
+>
+>   
+>
+> - 首先精确匹配 =-》其次以xx开头匹配^~-》然后是按文件中顺序的正则匹配-》最后是交给 / 通用匹配。 当有匹配成功时候，停止匹配，按当前匹配规则处理请求。
+
+```nginx
+location = / {
+# 只匹配 / 查询。
+}
+location / {
+# 匹配任何查询，因为所有请求都已 / 开头。但是正则表达式规则和长的块规则将被优先和查询匹配。
+}
+location ^~ /p_w_picpaths/ {
+# 匹配任何已 /p_w_picpaths/ 开头的任何查询并且停止搜索。任何正则表达式将不会被测试。
+}
+location ~*.(gif|jpg|jpeg)$ {
+# 匹配任何已 gif、jpg 或 jpeg 结尾的请求。
+}
+```
+
+**动静分离例子 及防盗链**
+
+```nginx
+	server {
+		listen 80;
+		server_name www.binmaa1.com;
+		
+		location ~*.(gif|jpg|jpeg|png)$ {
+			root /Softwave/tomcat/apache-tomcat8-8888/webapps/;
+			
+			#添加防盗链
+			valid_referers  www.binmaa1.com 192.168.200.73; #允许访问该目录的域名或IP
+			if ($invalid_referer){
+				rewrite ^/ https://dss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo/bd_logo1-66368c33f8.png;
+			}
+		}
+		location / {
+			proxy_pass http://192.168.200.73:8080;
+		}
+	}
+```
 
 
 
